@@ -22,6 +22,8 @@ This adds:
 TODO:
 - python 3.13+ drops cgi
 
+## Original README:
+
 > ### How productive were you today? How much code have you written? Where did your time go?
 
 Keep track of your computer activity throughout the day: visualize your active window titles and the number of keystrokes in beautiful HTML timelines. Current features:
