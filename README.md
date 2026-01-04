@@ -6,6 +6,8 @@
 The original https://github.com/karpathy/ulogme has a few bugs and is since 10 years sadly unmaintained.
 I need to figure out why i cant get more work done per day and so i needed to fix this :)
 
+Pull requests are welcome!
+
 This fixes:
 - python 3 support (taken from fork of Fedor Chervinskii)
 - xfce4-screensaver support
