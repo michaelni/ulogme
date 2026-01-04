@@ -1,6 +1,22 @@
 
 # ulogme
 
+## Fork differences
+
+The original https://github.com/karpathy/ulogme has a few bugs and is since 10 years sadly unmaintained.
+I need to figure out why i cant get more work done per day and so i needed to fix this :)
+
+This fixes:
+- python 3 support (taken from fork of Fedor Chervinskii)
+- xfce4-screensaver support
+- minor bugfixes
+
+This adds:
+- basic path based authentication (enabled by default)
+
+TODO:
+- python 3.13+ drops cgi
+- go over pull requests from the original
 
 > ### How productive were you today? How much code have you written? Where did your time go?
 
