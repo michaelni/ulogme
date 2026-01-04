@@ -21,9 +21,13 @@ do
 	# Try to figure out which Desktop Manager is running and set the
 	# screensaver commands accordingly.
 	if [[ $GDMSESSION == 'xfce' ]]; then
-		# Assume XFCE folks use xscreensaver (the default).
-		screensaverstate=$(xscreensaver-command -time | cut -f2 -d: | cut -f2-3 -d' ')
-		if [[ $screensaverstate =~ "screen non-blanked" ]]; then islocked=false; fi
+		if command -v xfce4-screensaver-command >/dev/null 2>&1; then
+			screensaverstate=$(xfce4-screensaver-command -q | head -1)
+			if [[ $screensaverstate =~ "The screensaver is inactive" ]]; then islocked=false; fi
+		else
+			screensaverstate=$(xscreensaver-command -time | cut -f2 -d: | cut -f2-3 -d' ')
+			if [[ $screensaverstate =~ "screen non-blanked" ]]; then islocked=false; fi
+		fi
 	elif [[ $GDMSESSION == 'ubuntu' || $GDMSESSION == 'ubuntu-2d' || $GDMSESSION == 'gnome-shell' || $GDMSESSION == 'gnome-classic' || $GDMSESSION == 'gnome-fallback' || $GDMSESSION == 'cinnamon' ]]; then
 		# Assume the GNOME/Ubuntu/cinnamon folks are using gnome-screensaver.
 		screensaverstate=$(gnome-screensaver-command -q 2>&1 /dev/null)
