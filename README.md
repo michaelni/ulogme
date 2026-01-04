@@ -14,6 +14,7 @@ This fixes:
 
 This adds:
 - basic path based authentication (enabled by default)
+- basic Sec-Fetch-Site / same-origin checks
 
 TODO:
 - python 3.13+ drops cgi

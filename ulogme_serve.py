@@ -56,7 +56,13 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
       return False
 
     if self.path == pathtoken or re.fullmatch(pathtoken + r"/[^/]*", self.path):
-      return True
+      sfs = self.headers.get("Sec-Fetch-Site")
+      if sfs == "none" and self.command == "GET":
+        if self.path == pathtoken or self.path.endswith("html"):
+          return True
+      elif sfs == "same-origin":
+        return True
+
     print(f"Unpermitted request: {datetime.datetime.now()} Sender: {self.client_address} path: {self.path} command: {self.command} headers: {self.headers}")
     return False
 
