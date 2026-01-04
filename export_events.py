@@ -23,10 +23,8 @@ def loadEvents(fname):
       stamp = int(w[:ix])
       str = w[ix+1:]
       events.append({'t':stamp, 's':str})
-  except Exception as e:
-    print('%s probably does not exist, setting empty events list.' % (fname, ))
-    print('error was:')
-    print(e)
+  except FileNotFoundError as e:
+    print(f' {fname} not found, setting empty events list')
     events = []
   return events
 
