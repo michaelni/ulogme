@@ -9,6 +9,7 @@ I need to figure out why i cant get more work done per day and so i needed to fi
 This fixes:
 - python 3 support (taken from fork of Fedor Chervinskii)
 - xfce4-screensaver support
+- Fix window title logging on Cinnamon 18 (by Ilija Ilievski)
 - minor bugfixes
 
 This adds:
@@ -16,7 +17,6 @@ This adds:
 
 TODO:
 - python 3.13+ drops cgi
-- go over pull requests from the original
 
 > ### How productive were you today? How much code have you written? Where did your time go?
 
