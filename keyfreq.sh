@@ -8,20 +8,20 @@
 LANG=en_US.utf8
 
 helperfile="logs/keyfreqraw.txt" # temporary helper file
+helperpid="logs/keyfreqraw.pid"
 
 mkdir -p logs
 
 while true
 do
-  showkey > $helperfile &
-  PID=$!
-  
+  showkey | grep -c release `echo $! > $helperpid` > "$helperfile" &
+
   # work in windows of 9 seconds 
   sleep 9
-  kill $PID
+  kill `cat $helperpid`
   
   # count number of key release events
-  num=$(cat $helperfile | grep release | wc -l)
+  num=$(cat $helperfile)
   
   # append unix time stamp and the number into file
   logfile="logs/keyfreq_$(python rewind7am.py).txt"

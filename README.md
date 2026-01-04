@@ -10,6 +10,7 @@ This fixes:
 - python 3 support (taken from fork of Fedor Chervinskii)
 - xfce4-screensaver support
 - Fix window title logging on Cinnamon 18 (by Ilija Ilievski)
+- not storing detailed keypresses to disk, the intermediate file with detailed keypressed is no more
 - minor bugfixes
 
 This adds:
