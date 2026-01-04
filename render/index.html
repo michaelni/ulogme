@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>ulogme</title>
 
+    <link rel="icon" href="favicon.ico">
     <link href='font_lato.css' rel='stylesheet' type='text/css'>
     <link href='index_style.css' rel='stylesheet' type='text/css'>
 
@@ -440,7 +441,7 @@
       $("#reloadbutton").click(function() {
 
         startSpinner();
-        $.post("/refresh",
+        $.post("refresh",
           {"time" : event_list[cur_event_id].t0},
           function(data,status){
             console.log("Data: " + data + "\nStatus: " + status);
@@ -456,7 +457,7 @@
       $("#notesadd").click(function() {
 
         startSpinner();
-        $.post("/addnote",
+        $.post("addnote",
           {"note": $("#notetext").val(), "time": clicktime},
           function(data,status){
             console.log("Data: " + data + "\nStatus: " + status);
@@ -519,7 +520,7 @@
         $("#blogenter").hide();
 
         // submit to server with POST request
-        $.post("/blog",
+        $.post("blog",
           {"time" : event_list[cur_event_id].t0, "post": txt},
            function(data,status){
             console.log("Data: " + data + "\nStatus: " + status);
