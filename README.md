@@ -42,6 +42,7 @@ See a blog post (along with multiple screenshots) describing the project [here.]
 2. If you're on Ubuntu, make sure you have the dependencies: `$ sudo apt-get install xdotool wmctrl`. On Fedora, you may also need `sudo yum install gnome-screensaver`.
 3. `cd` inside and run `$ ./ulogme.sh` (note: this will ask you for sudo authentication which is required for `showkey` command). This will launch two scripts. One records the frequency of keystrokes and the other records active window titles. Both write their logs into log files in the `logs/` directory. Every log file is very simply just the unix time stamp followed by data, one per line.
 4. For **OSX** only: there might be an additional step where you have to go to System Preferences > Security & Privacy > Accessibility, and make sure that Terminal (or iTerm2, or whatever you use to launch ulogme) is checked. If it wasn't checked previously and you just checked it, you may need to restart ulogme. If you don't do this step, you might find that window logging works but keypress logging doesn't.
+5. As of Mac OS 10.14 there is an additional permission that needs to be granted to the shell script in order to count keystrokes. To do so, go to System Preferences > Security & Privacy > Input Monitoring, add ulogme/osx/dist/ulogme_osx and make sure it is checked off. Lock the settings, and restart the script and keystrokes should begin to get recorded.
 
 **The user interface**
 
