@@ -8,17 +8,21 @@
 var title_mappings = [
 {pattern : /Google Chrome/, mapto : 'Google Chrome'},
 {pattern : /Firefox/, mapto : 'Google Chrome'}, // lol
+{pattern : /Brave/, mapto : 'Google Chrome'},
 {pattern : /MATLAB/, mapto : 'Matlab'},
 {pattern : /Figure/, mapto : 'Matlab'},
 {pattern : /Inotebook/, mapto : 'INotebook'},
 {pattern : /.pdf/, mapto : 'Papers'},
 {pattern : /Gmail/, mapto : 'Gmail'},
 {pattern : /karpathy@/, mapto : 'Terminal'},
+{pattern : /michael@/, mapto : 'Terminal'},
+{pattern : /Kwrite/, mapto : 'SubText2'},
 {pattern : /Sublime Text/, mapto : 'SubText2'},
 {pattern : /\.js.*Sublime Text/, mapto : 'SubText2 Coding'},
 {pattern : /\.py.*Sublime Text/, mapto : 'SubText2 Coding'},
 {pattern : /\.html.*Sublime Text/, mapto : 'SubText2 Coding'},
 {pattern : /\.cpp.*Sublime Text/, mapto : 'SubText2 Coding'},
+{pattern : /\.c.*Sublime Text/, mapto : 'SubText2 Coding'},
 {pattern : /\.h.*Sublime Text/, mapto : 'SubText2 Coding'},
 {pattern : /__LOCKEDSCREEN/, mapto : 'Locked Screen'}, // __LOCKEDSCREEN is a special token
 {pattern : /TeXworks/, mapto : 'Latex'},
