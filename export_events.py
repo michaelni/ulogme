@@ -45,9 +45,9 @@ def updateEvents():
   files that can be used by the frontend
   """
   L = []
-  L.extend(glob.glob("logs/keyfreq_*.txt"))
-  L.extend(glob.glob("logs/window_*.txt"))
-  L.extend(glob.glob("logs/notes_*.txt"))
+  L.extend(glob.glob("logs/keyfreq_[0-9]*.txt"))
+  L.extend(glob.glob("logs/window_[0-9]*.txt"))
+  L.extend(glob.glob("logs/notes_[0-9]*.txt"))
 
   # extract all times. all log files of form {type}_{stamp}.txt
   ts = [int(x[x.find('_')+1:x.find('.txt')]) for x in L]
