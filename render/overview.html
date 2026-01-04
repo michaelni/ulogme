@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>ulogme</title>
+
+    <link rel="icon" href="favicon.ico">
     <link href='http://fonts.googleapis.com/css?family=Lato:300,400,900' rel='stylesheet' type='text/css'>
     <link href='overview_style.css' rel='stylesheet' type='text/css'>
 
@@ -458,7 +460,7 @@
       $("#reloadbutton").click(function() {
 
         startSpinner();
-        $.post("/refresh",
+        $.post("refresh",
           {"time" : 0},
           function(data,status){
             console.log("Data: " + data + "\nStatus: " + status);
