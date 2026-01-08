@@ -16,6 +16,7 @@ This fixes:
 - minor bugfixes
 
 This adds:
+- private_titles file (simple list of window titles you want never logged)
 - basic path based authentication (enabled by default)
 - basic Sec-Fetch-Site / same-origin checks
 

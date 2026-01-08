@@ -12,6 +12,24 @@ waittime="2" # number of seconds between executions of loop
 maxtime="600" # if last write happened more than this many seconds ago, write even if no window title changed
 #------------------------------
 
+private_titles_file="private_titles"
+
+is_private_title() {
+	local title="$1" re
+	[[ -n "$title" ]] || return 1
+
+	while IFS= read -r re || [[ -n "$re" ]]; do
+		re="${re%$'\r'}"          # tolerate CRLF (Windows)
+		[[ -z "$re" ]] && continue
+		[[ "${re:0:1}" == "#" ]] && continue
+		[[ "$title" =~ $re ]] && return 0
+	done < "$private_titles_file"
+
+	return 1
+}
+
+#-----------------------------------------------------
+
 mkdir -p logs
 last_write="0"
 lasttitle=""
@@ -66,6 +84,11 @@ do
 	#	perform_write=true
 	#fi
 
+	if is_private_title "$curtitle"; then
+		sleep "$waittime" # sleep
+		continue
+	fi
+
 	# log window switch if appropriate
 	if [ "$perform_write" = true ]; then 
 		# number of seconds elapsed since Jan 1, 1970 0:00 UTC
@@ -73,9 +96,9 @@ do
 		echo "$T $curtitle" >> $logfile
 		echo "logged window title: $(date) $curtitle into $logfile"
 		last_write=$T
+		lasttitle="$curtitle" # swap
 	fi
 
-	lasttitle="$curtitle" # swap
 	sleep "$waittime" # sleep
 done
 
