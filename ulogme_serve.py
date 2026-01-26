@@ -119,6 +119,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
 httpd = socketserver.ThreadingTCPServer((IP, PORT), CustomHandler)
 
-print('Serving ulogme, see it on http://localhost:' + repr(PORT) + pathtoken)
+print('Serving ulogme, see it on http://localhost:' + repr(PORT) + pathtoken + "/index.html")
 httpd.serve_forever()
 
