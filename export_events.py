@@ -6,6 +6,18 @@ import os.path
 import sys
 import glob
 
+# Unicode / legacy line separators that splitlines() would treat as line breaks
+BAD_LINE_SEPARATORS = {
+    ord('\r'): None,
+    ord('\v'): None,
+    ord('\f'): None,
+    ord('\x1c'): None,
+    ord('\x1d'): None,
+    ord('\x1e'): None,
+    ord('\x85'): None,
+    ord('\u2028'): None,  # LINE SEPARATOR
+    ord('\u2029'): None,  # PARAGRAPH SEPARATOR
+}
 
 def loadEvents(fname):
   """
@@ -16,7 +28,7 @@ def loadEvents(fname):
   events = []
 
   try:
-    ws = open(fname, 'r').read().splitlines()
+    ws = open(fname, 'r').read().translate(BAD_LINE_SEPARATORS).splitlines()
     events = []
     for w in ws:
       ix = w.find(' ') # find first space, that's where stamp ends
