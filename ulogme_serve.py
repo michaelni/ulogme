@@ -98,7 +98,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
       note = form.get('note') or ''
       note_time = int(form.get('time'))
       os.chdir(rootdir) # pop out
-      subprocess.run(['./note.sh', str(note_time)], input=note + '\n', text=True)
+      subprocess.run(['./ctrl.sh', 'note', str(note_time)], input=note + '\n', text=True)
       updateEvents() # defined in export_events.py
       os.chdir('render') # go back to render
       result = 'OK'
@@ -120,6 +120,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     self.end_headers()
     self.wfile.write(result.encode('utf-8'))
 
+socketserver.ThreadingTCPServer.allow_reuse_address = True
 httpd = socketserver.ThreadingTCPServer((IP, PORT), CustomHandler)
 
 print('Serving ulogme, see it on http://localhost:' + repr(PORT) + pathtoken + "/index.html")

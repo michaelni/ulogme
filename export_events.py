@@ -63,6 +63,8 @@ def updateEvents():
   ts = [int(x[x.find('_')+1:x.find('.txt')]) for x in L]
   ts = list(set(ts))
   ts.sort()
+  if not ts:
+    return
 
   mint = min(ts)
   maxt = max(ts)
