@@ -5,7 +5,7 @@ import secrets
 import string
 import subprocess
 import sys
-import cgi
+import urllib.parse
 import re
 import os
 
@@ -36,7 +36,7 @@ for entry in Path(".").iterdir():
             del pathtoken
 
 if "pathtoken" not in globals():
-    pathtoken = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+    pathtoken = "auth-token-" + "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
 
     print(f"Creating random symlink: {pathtoken}")
     print("You can delete this link whenever you like, a new random one will be created on the next run")
@@ -45,7 +45,7 @@ if "pathtoken" not in globals():
     except PermissionError as e:
         print(e)
         print(f"Cannot create random symlink {pathtoken}, likely windows without devmode.")
-        print("please manually create a random (alphanummeric) symlink in render/ that points back to render/ this will serve as an authentication key in the URL")
+        print("please manually create a symlink named auth-token-<random alphanumeric> in render/ that points back to render/; this will serve as an authentication key in the URL")
         exit(1)
 
 pathtoken = "/" + pathtoken
@@ -73,19 +73,21 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
     http.server.SimpleHTTPRequestHandler.do_GET(self)
 
+  def read_form(self):
+    length = int(self.headers.get('Content-Length', 0))
+    body = self.rfile.read(length).decode('utf-8')
+    return {key: values[0] for key, values in urllib.parse.parse_qs(body).items()}
+
   def do_POST(self):
     assert(pathtoken in self.path)
 
-    form = cgi.FieldStorage(
-      fp = self.rfile,
-      headers = self.headers,
-      environ = {'REQUEST_METHOD':'POST', 'CONTENT_TYPE':self.headers['Content-Type']})
+    form = self.read_form()
     result = 'NOT_UNDERSTOOD'
 
     if self.path == pathtoken + '/refresh':
       # recompute jsons. We have to pop out to root from render directory
       # temporarily. It's a little ugly
-      refresh_time = form.getvalue('time')
+      refresh_time = form.get('time')
       os.chdir(rootdir) # pop out
       updateEvents() # defined in export_events.py
       os.chdir('render') # pop back to render directory
@@ -93,8 +95,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
       
     if self.path ==  pathtoken + '/addnote':
       # add note at specified time and refresh
-      note = form.getvalue('note') or ''
-      note_time = int(form.getvalue('time'))
+      note = form.get('note') or ''
+      note_time = int(form.get('time'))
       os.chdir(rootdir) # pop out
       subprocess.run(['./note.sh', str(note_time)], input=note + '\n', text=True)
       updateEvents() # defined in export_events.py
@@ -103,9 +105,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
     if self.path == pathtoken + '/blog':
       # add note at specified time and refresh
-      post = form.getvalue('post')
+      post = form.get('post')
       if post is None: post = ''
-      post_time = int(form.getvalue('time'))
+      post_time = int(form.get('time'))
       os.chdir(rootdir) # pop out
       trev = rewindTime(post_time)
       open('logs/blog_%d.txt' % (post_time, ), 'w').write(post)

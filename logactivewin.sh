@@ -31,6 +31,7 @@ is_private_title() {
 #-----------------------------------------------------
 
 mkdir -p logs
+[[ -e "$private_titles_file" ]] || cp "$private_titles_file.example" "$private_titles_file"
 last_write="0"
 lasttitle=""
 while true
@@ -92,7 +93,7 @@ do
 	# log window switch if appropriate
 	if [ "$perform_write" = true ]; then 
 		# number of seconds elapsed since Jan 1, 1970 0:00 UTC
-		logfile="logs/window_$(python rewind7am.py).txt"
+		logfile="logs/window_$(python3 rewind7am.py).txt"
 		echo "$T $curtitle" >> $logfile
 		echo "logged window title: $(date) $curtitle into $logfile"
 		last_write=$T

@@ -14,14 +14,12 @@ This fixes:
 - Fix window title logging on Cinnamon 18 (by Ilija Ilievski)
 - not storing detailed keypresses to disk, the intermediate file with detailed keypressed is no more
 - minor bugfixes
+- python 3.13+ support (no longer uses the removed cgi module)
 
 This adds:
-- private_titles file (simple list of window titles you want never logged)
+- private_titles file (simple list of window titles you want never logged; created from private_titles.example on first run, not tracked by git)
 - basic path based authentication (enabled by default)
 - basic Sec-Fetch-Site / same-origin checks
-
-TODO:
-- python 3.13+ drops cgi
 
 ## Original README: (with links updated)
 
@@ -46,7 +44,7 @@ See a blog post (along with multiple screenshots) describing the project [here.]
 **To start recording**
 
 1. Clone the repository to some folder: `$ git clone https://github.com/michaelni/ulogme.git`
-2. If you're on Ubuntu, make sure you have the dependencies: `$ sudo apt-get install xdotool wmctrl`. On Fedora, you may also need `sudo yum install gnome-screensaver`.
+2. Make sure you have Python 3 (`python3`); ulogme does not support Python 2. If you're on Ubuntu, make sure you have the dependencies: `$ sudo apt-get install python3 xdotool wmctrl`. On Fedora, you may also need `sudo yum install gnome-screensaver`.
 3. `cd` inside and run `$ ./ulogme.sh` (note: this will ask you for sudo authentication which is required for `showkey` command). This will launch two scripts. One records the frequency of keystrokes and the other records active window titles. Both write their logs into log files in the `logs/` directory. Every log file is very simply just the unix time stamp followed by data, one per line.
 4. For **OSX** only: there might be an additional step where you have to go to System Preferences > Security & Privacy > Accessibility, and make sure that Terminal (or iTerm2, or whatever you use to launch ulogme) is checked. If it wasn't checked previously and you just checked it, you may need to restart ulogme. If you don't do this step, you might find that window logging works but keypress logging doesn't.
 5. As of Mac OS 10.14 there is an additional permission that needs to be granted to the shell script in order to count keystrokes. To do so, go to System Preferences > Security & Privacy > Input Monitoring, add ulogme/osx/dist/ulogme_osx and make sure it is checked off. Lock the settings, and restart the script and keystrokes should begin to get recorded.
@@ -54,8 +52,8 @@ See a blog post (along with multiple screenshots) describing the project [here.]
 **The user interface**
 
 1. **Important**. As a one-time setup, copy over the example settings file to your own copy: `$ cp render/render_settings_example.js render/render_settings.js` to create your own `render_settings.js` settings file. In this file modify everything to your own preferences. Follow the provided example to specify title mappings: A raw window title comes in, and we match it against regular expressions to determine what type of activity it is. For example, the code would convert "Google Chrome - some cool website" into just "Google Chrome". Follow the provided example and read the comments for all settings in the file.
-2. Once that's set up, start the web server viewer: `$ python ulogme_serve.py`, and go to to the provided address) for example `http://localhost:8123`) in your browser. Hit the refresh button on top right every time you'd like to refresh the results based on most recently recorded activity
-3. If your data isn't loading, try to explicitly run `python export_events.py` and then hit refresh. This should only be an issue the very first time you run ulogme.
+2. Once that's set up, start the web server viewer: `$ python3 ulogme_serve.py`, and go to to the provided address) for example `http://localhost:8123`) in your browser. Hit the refresh button on top right every time you'd like to refresh the results based on most recently recorded activity
+3. If your data isn't loading, try to explicitly run `python3 export_events.py` and then hit refresh. This should only be an issue the very first time you run ulogme.
 
 ## User Interface
 
@@ -73,8 +71,8 @@ The user interface can switch between a single day view and an overview view by 
 
 ## Known issues
 - One Ubuntu user reported broken view with no data. On further inspection we found that the logs were corrupt. One of the lines in a file in `/logs` was, instead of looking as `{timestamp} {data}`  looked as `@@@@@@@{timestamp} {data}`, in other words an odd character was appended to the timestamp somehow. We manually erased these characters from the log file to fix the issue.
-- Legacy code note: if you used ulogme from before 28 July, you will have to run `$ python legacy_split_events.py` to convert your events files, once.
-- You may see *"address already in use"* if you try to run `python ulogme_serve.py`. Sometimes the system can get confused and takes a while to update what ports are being used. Use the optional argument to specify a different port, for example `python ulogme_serve.py 8124` and then go to `http://localhost:8124` instead, for example.
+- Legacy code note: if you used ulogme from before 28 July, you will have to run `$ python3 legacy_split_events.py` to convert your events files, once.
+- You may see *"address already in use"* if you try to run `python3 ulogme_serve.py`. Sometimes the system can get confused and takes a while to update what ports are being used. Use the optional argument to specify a different port, for example `python3 ulogme_serve.py 8124` and then go to `http://localhost:8124` instead, for example.
 - Overview page is blank. Are you sure your browser supports ECMAScript 6? Chrome should be fine, Firefox might not be, yet. 
 
 ## Contributing

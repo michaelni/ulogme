@@ -19,7 +19,7 @@ do
 	then
 		# take screenshot into file
 		T="$(date +%s)"
-		fname="$saveprefix_$T.jpg"
+		fname="${saveprefix}_$T.jpg"
 		# q is quality. Higher is higher quality
 		scrot -q 50 "$fname"
 	else

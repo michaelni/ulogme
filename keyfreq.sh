@@ -24,7 +24,7 @@ do
   num=$(cat $helperfile)
   
   # append unix time stamp and the number into file
-  logfile="logs/keyfreq_$(python rewind7am.py).txt"
+  logfile="logs/keyfreq_$(python3 rewind7am.py).txt"
   echo "$(date +%s) $num"  >> $logfile
   echo "logged key frequency: $(date) $num release events detected into $logfile"
   
