@@ -287,7 +287,7 @@
         .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
         .on("click", function(d){ 
           $("#notesinfo").show(); 
-          $("#notesmsg").html("clicked event <b>" + d.s + "</b><br> Add note at time of this event:");
+          $("#notesmsg").empty().append("clicked event ", $("<b>").text(d.s), "<br>", " Add note at time of this event:");
           $("#notetext").focus()
           clicktime = d.x+t00;
           return 0; 

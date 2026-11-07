@@ -3,6 +3,7 @@ import http.server
 import datetime
 import secrets
 import string
+import subprocess
 import sys
 import cgi
 import re
@@ -92,10 +93,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
       
     if self.path ==  pathtoken + '/addnote':
       # add note at specified time and refresh
-      note = form.getvalue('note')
-      note_time = form.getvalue('time')
+      note = form.getvalue('note') or ''
+      note_time = int(form.getvalue('time'))
       os.chdir(rootdir) # pop out
-      os.system('echo %s | ./note.sh %s' % (note, note_time))
+      subprocess.run(['./note.sh', str(note_time)], input=note + '\n', text=True)
       updateEvents() # defined in export_events.py
       os.chdir('render') # go back to render
       result = 'OK'
