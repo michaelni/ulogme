@@ -24,6 +24,62 @@ function appendSwatchLabel(d3parent, tag, color, text) {
   return el;
 }
 
+var tooltip_div;
+function tooltipDiv() {
+  if(!tooltip_div) {
+    tooltip_div = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("z-index", "10")
+      .style("visibility", "hidden");
+  }
+  return tooltip_div;
+}
+
+function showTooltip(text) {
+  tooltipDiv().style("visibility", "visible").text(text)
+    .style("top", (d3.event.pageY-10)+"px").style("left", (d3.event.pageX+10)+"px");
+}
+
+function hideTooltip() {
+  tooltipDiv().style("visibility", "hidden");
+}
+
+function addTooltip(selection, textFn) {
+  selection
+    .on("mouseover.tooltip", function(d, i) { showTooltip(textFn(d, i)); })
+    .on("mousemove.tooltip", function(d, i) { showTooltip(textFn(d, i)); })
+    .on("mouseout.tooltip", hideTooltip);
+}
+
+function addLineTooltip(svg, width, height, points, xFn, textFn) {
+  var xs = points.map(xFn);
+  var guide = svg.append("line")
+    .attr("y1", 0).attr("y2", height)
+    .attr("stroke", "#898781")
+    .style("visibility", "hidden");
+  svg.append("rect")
+    .attr("width", width).attr("height", height)
+    .attr("fill", "none")
+    .style("pointer-events", "all")
+    .on("mousemove", function() {
+      var mx = d3.mouse(this)[0];
+      var i = Math.min(d3.bisectLeft(xs, mx), xs.length-1);
+      if(i > 0 && mx - xs[i-1] < xs[i] - mx) i--;
+      guide.attr("x1", xs[i]).attr("x2", xs[i]).style("visibility", "visible");
+      showTooltip(textFn(points[i], i));
+    })
+    .on("mouseout", function() {
+      guide.style("visibility", "hidden");
+      hideTooltip();
+    });
+}
+
+function ppClock(t) {
+  var d = new Date(t * 1000);
+  return d.getHours() + ":" + ("0" + d.getMinutes()).slice(-2);
+}
+
 // utility that looks at the URL of current page and sets QueryString
 var QueryString = function () {
   var query_string = {};

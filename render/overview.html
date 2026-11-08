@@ -120,7 +120,9 @@
           if(skipdraw[m]) continue; // skip!
           dtimes.push({
             val: edur[k].hasOwnProperty(m) ? edur[k][m] : 0,
-            col: color_hash[m]
+            col: color_hash[m],
+            name: m,
+            day: ppDateShort(new Date(event_list[k].t0 * 1000))
           });
         }
 
@@ -142,6 +144,7 @@
           .attr("x", margin.left + k * dsz)
           .attr("y", function(d) { gh += d.val; return height + margin.top - gh * yscale; })
           .attr("fill", function(d) { return d.col; } );
+        addTooltip(svgg.selectAll("rect"), function(d) { return d.day + ", " + d.name + ": " + (d.val/60/60).toFixed(2) + "hr"; });
       }
     }
 
@@ -211,6 +214,11 @@
       var maxs = 0;
       var maxktot = 0;
       var kevents_global = [];
+      var binLabel = function(i) {
+        var minutes = 7*60 + i*time_bin/60;
+        var clock = function(m) { return Math.floor(m/60) % 24 + ":" + ("0" + m%60).slice(-2); };
+        return clock(minutes) + " to " + clock(minutes + time_bin/60);
+      };
       var max_kevents_global = 0;
       var sum_kevents_global = 0;
       for(var k=0;k<events.length;k++) {
@@ -268,6 +276,8 @@
         .datum(kevents_global)
         .attr("class", "line")
         .attr("d", line);
+      addLineTooltip(svg, W, H*2, kevents_global, function(d,i) { return (W - 2*wmargin) * i / sx + wmargin; },
+        function(d, i) { return binLabel(i) + ": " + d + " keys over all days"; });
 
       // draw x axis: times of the day
       var div = d3.select("#keystats").append("div");
@@ -311,7 +321,10 @@
           .attr('height', H)
           .attr('fill', function(d) {
             return d3.interpolateRgb('#24282e', '#b7d3f6')(d / maxs);
-          });
+          })
+          .call(addTooltip, function(day) {
+            return function(d, i) { return day + ", " + binLabel(i) + ": " + d + " keys"; };
+          }(ppDateShort(d0s[k])));
 
         // draw y axis: time
         svg.append('text')
@@ -326,7 +339,8 @@
           .attr('y', 0)
           .attr('width', function(d) { return ktots[k]/maxktot * wmargin; })
           .attr('height', H)
-          .attr('fill', 'rgb(255, 100, 100)');
+          .attr('fill', 'rgb(255, 100, 100)')
+          .call(addTooltip, function(text) { return function() { return text; }; }(ppDateShort(d0s[k]) + ": " + ktots[k] + " keys in total"));
 
         svg.append('text')
           .attr('transform', 'translate(' + (W - wmargin + 7) + ', ' + 13 + ')')
@@ -403,6 +417,7 @@
       chart_data.textpad = 300;
       chart_data.textmargin = 10;
       chart_data.title = 'total keys per window';
+      chart_data.tooltip = function(d) { return d.name + ': ' + d.val + ' keys over ' + n + ' days'; };
       chart_data.data = gstats;
       d3utils.drawHorizontalBarChart(d3.select('#keysummary'), chart_data);
     }
@@ -433,6 +448,7 @@
       chart_data.textpad = 300;
       chart_data.textmargin = 10;
       chart_data.title = 'total time per window';
+      chart_data.tooltip = function(d) { return d.name + ': ' + (d.val/60/60).toFixed(2) + 'hr over ' + n + ' days'; };
       chart_data.data = gstats;
       d3utils.drawHorizontalBarChart(d3.select('#timesummary'), chart_data);
     }

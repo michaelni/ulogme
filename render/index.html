@@ -50,6 +50,7 @@
       chart_data.width = $(window).width();
       chart_data.height = 500;
       chart_data.title = "Total Time: " + strTimeDelta(dtall);
+      chart_data.tooltip = function(d) { return d.name + ": " + strTimeDelta(d.val); };
       chart_data.data = stats;
       d3utils.drawPieChart(d3.select('#piechart'), chart_data);
     }
@@ -115,10 +116,8 @@
       var g = svg.selectAll(".h")
         .data(hacking_stats.events)
         .enter().append("g")
-        .attr("class", "h")
-        .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(strTimeDelta(d.dt));})
-        .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-        .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+        .attr("class", "h");
+      addTooltip(g, function(d) { return "Hacking " + ppClock(d.t0) + " to " + ppClock(d.t0 + d.dt) + ": " + strTimeDelta(d.dt); });
 
       g.append("rect")
         .attr("x", function(d) { return (d.t0-t00)/sx; } )
@@ -154,6 +153,7 @@
       chart_data.textpad = 300;
       chart_data.textmargin = 10;
       chart_data.title = "Total number of key strokes";
+      chart_data.tooltip = function(d) { return d.name + ": " + d.val + " keys"; };
       chart_data.data = stats;
       d3utils.drawHorizontalBarChart(d3.select('#keystats'), chart_data);
     }
@@ -179,6 +179,8 @@
         .datum(es)
         .attr("class", "line")
         .attr("d", line);
+      addLineTooltip(svg, W, 100, es, function(d) { return (d.t - t00) / sx; },
+        function(d) { return ppClock(d.t) + ": " + d.s + " keys"; });
 
       div.append("p").attr("class", "al").text("keystroke frequency");
     }
@@ -262,6 +264,7 @@
         .attr("font-size", 14)
         .attr("fill", "#DDD")
         .text(function(d) { return d.s; } );
+      addTooltip(g, function(d) { return ppClock(d.x + t00) + " " + d.s; });
     }
 
     var clicktime;
@@ -317,9 +320,6 @@
         .data(dts)
         .enter().append("g")
         .attr("class", "e")
-        .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(d.s);})
-        .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-        .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
         .on("click", function(d){ 
           $("#notesinfo").show(); 
           $("#notesmsg").empty().append("clicked event ", $("<b>").text(d.s), "<br>", " Add note at time of this event:");
@@ -334,6 +334,7 @@
         .attr("y", 0)
         .attr("height", 50)
         .attr("fill", function(d) { return filter_colors[d.fix]; });
+      addTooltip(g, function(d) { return ppClock(d.x + t00) + " " + d.s; });
 
       // produce little axis numbers along the timeline
       var d0 = new Date(t00 * 1000);
@@ -444,21 +445,12 @@
     var key_events;
     var notes_events;
     var blog;
-    var tooltip;
     var event_list = [];
     var loaded = false;
     var cur_event_id = -1;
     var clicktime = 0;
     function start() {
       
-      // create tooltip div
-      tooltip = d3.select("body")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("position", "absolute")
-      .style("z-index", "10")
-      .style("visibility", "hidden")
-      .text("");
 
       // we do this random thing to defeat caching. Very annoying
       $.getJSON("export_list.json?sigh=" + Math.floor(10000*Math.random()), function(data){
