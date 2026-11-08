@@ -60,13 +60,44 @@
       _.each(display_groups, function(x) { visualizeEvent(es, x); })
     }
 
+    function drawTimeTrack(svg, W, track_height) {
+      var sx = (ft-t00) / W;
+      svg.append("rect")
+        .attr("x", 0).attr("y", 0)
+        .attr("width", W).attr("height", track_height)
+        .attr("fill", "#232322");
+
+      var d0 = new Date(t00 * 1000);
+      d0.setMinutes(0);
+      d0.setSeconds(0);
+      d0.setMilliseconds(0);
+      for(var t = d0.getTime() / 1000 + 3600; t < ft; t += 3600) {
+        var x = (t-t00)/sx;
+        svg.append("line")
+          .attr("x1", x).attr("x2", x)
+          .attr("y1", 0).attr("y2", track_height)
+          .attr("stroke", "#383835");
+      }
+
+      [0.5, W-0.5].forEach(function(x) {
+        svg.append("line")
+          .attr("x1", x).attr("x2", x)
+          .attr("y1", 0).attr("y2", track_height)
+          .attr("stroke", "#74736e");
+      });
+      svg.append("line")
+        .attr("x1", 0).attr("x2", W)
+        .attr("y1", track_height - 0.5).attr("y2", track_height - 0.5)
+        .attr("stroke", "#74736e");
+    }
+
     // uses global variable hacking_events as input. Must be set
     // and global total_hacking_time as well.
     function visualizeHackingTimes(hacking_stats) {
       $("#hackingvis").empty();
       if(!draw_hacking) return; // global set in render_settings.js
 
-      var c = "rgb(200,0,0)"; // color
+      var c = "rgb(240,70,70)"; // color
 
       var div = d3.select("#hackingvis").append("div");
       div.append("p").attr("class", "tt").attr("style", "color:"+c).text("Hacking Streak");
@@ -78,6 +109,7 @@
       var svg = div.append("svg")
       .attr("width", W)
       .attr("height", 30);
+      drawTimeTrack(svg, W, 30);
 
       var sx = (ft-t00) / W;
       var g = svg.selectAll(".h")
@@ -134,8 +166,9 @@
 
       var div = d3.select("#keygraph").append("div");
       var svg = div.append("svg")
-      .attr("width", "100%")
+      .attr("width", W)
       .attr("height", 100);
+      drawTimeTrack(svg, W, 100);
 
       var sx = (ft-t00) / W;
       var line = d3.svg.line()
@@ -172,11 +205,12 @@
 
       console.log('drawing ' + dts.length + ' notes.');
       var div = d3.select("#notesvis").append("div");
-      div.append("p").attr("class", "tt").attr("style", "color: #964B00").text("Notes");
+      div.append("p").attr("class", "tt").attr("style", "color: #D9954F").text("Notes");
       var W = $(window).width() - 40;
       var svg = div.append("svg")
       .attr("width", W)
       .attr("height", 70);
+      drawTimeTrack(svg, W, 50);
 
       var sx = (ft-t00) / W;
 
@@ -206,7 +240,7 @@
           .attr("x", function(d){ return d.t/sx; })
           .attr("y", function(d){ return 50-d.a; })
           .attr("height", function(d){ return d.a; })
-          .attr("fill", "#E4CFBA");
+          .attr("fill", "#5A4632");
       }
 
       // draw notes
@@ -220,13 +254,13 @@
         .attr("width", 2)
         .attr("y", 0)
         .attr("height", 50)
-        .attr("fill", "#964B00");
+        .attr("fill", "#D9954F");
 
       g.append("text")
         .attr("transform", function(d,i) { return "translate(" + (d.x/sx+5) + "," + (10+15*(i%5)) + ")"; })
         .attr("font-family", "'Lato', sans-serif")
         .attr("font-size", 14)
-        .attr("fill", "#333")
+        .attr("fill", "#DDD")
         .text(function(d) { return d.s; } );
     }
 
@@ -267,7 +301,7 @@
 
         var filter_div = filters_div.append("div").attr("class", "fdiv");
         var c = filter_colors[q];
-        filter_div.append("p").attr("class", "tt").attr("style", "color:"+c).text(filter[q]);
+        appendSwatchLabel(filter_div, "p", c, filter[q]).attr("class", "tt");
         var txt = strTimeDelta(ttoti[q]);
         filter_div.append("p").attr("class", "td").text(txt);
       }
@@ -276,6 +310,7 @@
       var svg = div.append("svg")
       .attr("width", W)
       .attr("height", 70);
+      drawTimeTrack(svg, W, 50);
 
       var sx = (ft-t00) / W;
       var g = svg.selectAll(".e")
@@ -311,7 +346,7 @@
           .attr("transform", "translate(" + [(t-t00)/sx, 70] + ")")
           .attr("font-family", "'Lato', sans-serif")
           .attr("font-size", 14)
-          .attr("fill", "#CCC")
+          .attr("fill", "#898781")
           .text(new Date(t * 1000).getHours());
         t += 3600;
       }
@@ -419,6 +454,7 @@
       // create tooltip div
       tooltip = d3.select("body")
       .append("div")
+      .attr("class", "tooltip")
       .style("position", "absolute")
       .style("z-index", "10")
       .style("visibility", "hidden")

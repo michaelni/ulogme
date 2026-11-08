@@ -1,6 +1,7 @@
 body {
   font-family: Impact, Charcoal, sans-serif;
-  color: #333;
+  color: #f0efec;
+  background-color: #1a1a19;
   font-size: 20px;
   margin: 0;
   padding: 0;
@@ -29,20 +30,20 @@ p {
   margin-top: 40px;
   padding-top: 20px;
   margin-bottom: 20px;
-  border-top: 1px solid #AAA;
+  border-top: 1px solid #383835;
 }
 .line {
   fill: none;
-  stroke: #55F;
+  stroke: #3987e5;
   stroke-width: 1px;
 }
 .al {
   text-align: center;
-  color: #55F;
+  color: #c3c2b7;
 }
 #keygraph {
   margin-top: 20px;
-  border-top: 1px solid #AAA;
+  border-top: 1px solid #383835;
 }
 #keystats {
   margin-top: 20px;
@@ -52,17 +53,17 @@ h2 {
   margin-bottom: 40px;
   font-family: 'Lato', sans-serif;
   font-weight: 300;
-  background-color: #FFA;
+  background-color: #2B2B1E;
   margin: 0;
   padding: 20px;
-  box-shadow: 0px 0px 3px 0px #AAA;
+  box-shadow: 0px 0px 3px 0px #000;
 }
 h1 {
   text-align: center;
   color: #FFF;
   font-size: 40px;
   font-weight: normal;
-  background-color: #F55;
+  background-color: #A33;
   margin: 0;
   padding: 20px;
 }
@@ -78,7 +79,7 @@ h1 {
   padding-bottom: 10px;
   padding-left: 40px;
   padding-right: 40px;
-  color: #662;
+  color: #CC9;
   cursor: pointer;
   /* make arrows unselectable, since they are text technically */
   -webkit-user-select: none;  /* Chrome all / Safari all */
@@ -90,8 +91,8 @@ h1 {
 #notesinfo {
   font-size: 16px;
   font-family: 'arial';
-  background-color: #FFA;
-  border: 1px solid #EE9;
+  background-color: #2B2B1E;
+  border: 1px solid #555530;
   padding: 10px;
   border-radius: 10px;
   display: none;
@@ -119,12 +120,12 @@ h1 {
 #notesadd {
   font-weight: bold;
   font-size: 20px;
-  border: 1px solid #333;
+  border: 1px solid #888;
   cursor: pointer;
   text-align: center;
   padding: 5px;
   width: 100px;
-  background-color: #7E7;
+  background-color: #2A7A2A;
   border-radius: 5px;
 }
 input[type="text"] {
@@ -132,9 +133,10 @@ input[type="text"] {
     margin-bottom: 5px;
     display: block;
     padding: 5px;
-    border: solid 1px #AA5;
+    border: solid 1px #776;
     width: 500px;
-    color: #333;
+    color: #DDD;
+    background-color: #222;
 }
 #spinnerdiv {
   position: absolute;
@@ -159,15 +161,16 @@ input[type="text"] {
   margin-right: 50px;
 }
 pre {
-  background-color: #F9F9F9;
-  border: 1px solid #CCC;
+  background-color: #222;
+  border: 1px solid #444;
   padding: 10px;
   border-radius: 3px;
   font-size: 16px;
 }
 #blogenter textarea {
-  background-color: #F9F9F9;
-  border: 1px solid #CCC;
+  background-color: #222;
+  color: #DDD;
+  border: 1px solid #444;
   padding: 10px;
   border-radius: 3px;
   font-size: 16px;
@@ -192,5 +195,21 @@ pre {
 #keystats text {
   font-family: Impact, Charcoal, sans-serif;
   font-size: 20px;
-  fill: #333;
+  fill: #f0efec;
+}
+svg text:not([fill]) {
+  fill: #f0efec;
+}
+.swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 2px;
+  margin-right: 0.3em;
+}
+.tooltip {
+  background-color: #222;
+  border: 1px solid #555;
+  padding: 2px 6px;
+  border-radius: 3px;
 }

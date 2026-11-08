@@ -51,7 +51,6 @@ var d3utils = {};
       .style("fill", function(d) { return d.data.col; });
 
     g.append("text")
-      .attr("fill", function(d) { return d.data.col; })
       .attr("transform", function(d) { 
         var c = arc.centroid(d);
         var x = c[0];

@@ -1,6 +1,7 @@
 body {
   font-family: Impact, Charcoal, sans-serif;
-  color: #333;
+  color: #f0efec;
+  background-color: #1a1a19;
   font-size: 20px;
   margin: 0;
   padding: 0;
@@ -10,7 +11,7 @@ h1 {
   color: #FFF;
   font-size: 40px;
   font-weight: normal;
-  background-color: #F55;
+  background-color: #A33;
   margin: 0;
   padding: 20px;
 }
@@ -51,7 +52,7 @@ h2 {
 }
 .line {
   fill: none;
-  stroke: #55F;
+  stroke: #3987e5;
   stroke-width: 2px;
 }
 #keystats {
@@ -76,7 +77,7 @@ h2 {
 }
 .skipdrawyes {
   text-decoration: line-through;
-  color: #999 !important;
+  color: #74736e !important;
 }
 .skipdrawno {
   text-decoration: underline;
@@ -90,4 +91,14 @@ h2 {
 #summaries {
   margin-top: 30px;
   margin-bottom: 40px;
+}
+svg text:not([fill]) {
+  fill: #f0efec;
+}
+.swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 2px;
+  margin-right: 0.3em;
 }

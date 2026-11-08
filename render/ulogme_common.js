@@ -1,14 +1,27 @@
 // Common utility functions
 // TODO: Expand this out, make everything more modular and cleaner
 
-// builds a dictionary of string -> color, in HSL format
+// first 8 hues validated for colorblind separation of neighbours on the dark surface; the rest picked to maximise distance from all others
+var series_palette = [
+  "#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#eecc00", "#1fa3c4",
+  "#55ee99", "#88bb22", "#eebbcc", "#66ddff",
+];
+var fallback_series_color = "#898781";
+
 function colorHashStrings(arr) {
+  var all = _.union(_.flatten(display_groups), arr);
   var color_hash = {};
-  for(var i=0,N=arr.length;i<N;i++) {
-    var title = arr[i];
-    color_hash[title] = "hsl(" + Math.floor((i+0.5)/N * 360) + ",100%,60%)";
-  }
+  all.forEach(function(m, i) {
+    color_hash[m] = i < series_palette.length ? series_palette[i] : fallback_series_color;
+  });
   return color_hash;
+}
+
+function appendSwatchLabel(d3parent, tag, color, text) {
+  var el = d3parent.append(tag);
+  el.append("span").attr("class", "swatch").style("background-color", color);
+  el.append("span").text(text);
+  return el;
 }
 
 // utility that looks at the URL of current page and sets QueryString

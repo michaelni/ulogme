@@ -30,7 +30,7 @@
       var ldiv = d3div.append("div").attr('class', 'legenddiv');
 
       for(var i=0;i<etypes.length;i++) {
-        var pi = ldiv.append('p').text(etypes[i]).attr('style', 'color:' + color_hash[etypes[i]]);
+        var pi = appendSwatchLabel(ldiv, 'p', color_hash[etypes[i]], etypes[i]);
 
         var m = etypes[i];
         if(skipdraw[m]) { pi.attr('class', 'skipdrawyes'); }
@@ -73,7 +73,7 @@
           .attr("x2", width + margin.left)
           .attr("y1", yy)
           .attr("y2", yy)
-          .attr("stroke", "#EEE")
+          .attr("stroke", "#2c2c2a")
           .attr("stroke-width", 1);
 
         yn++;
@@ -91,7 +91,7 @@
           var x = margin.left + i * dsz;
           var y = height + margin.top + 3;
           return "translate(" + x + "," + y + ")rotate(90)";})
-        .attr("fill", "#333")
+        .attr("fill", "#c3c2b7")
         .attr("font-family", "arial")
         .attr("font-size", "14px")
         .text(function(d) { var dobj = new Date(d.t0 * 1000); return ppDateShort(dobj); })
@@ -104,7 +104,7 @@
         .attr("stroke", function(d) { 
           var dobj = new Date(d.t0 * 1000); 
           var isMonday = dobj.getDay() === 1;
-          return isMonday ? "#BBB" : "#EEE"
+          return isMonday ? "#5a5955" : "#2c2c2a"
         })
         .attr('x1', function(d, i) { return margin.left + i * dsz; })
         .attr('x2', function(d, i) { return margin.left + i * dsz; })
@@ -286,7 +286,7 @@
         .attr('x2', q/24*(W-2*wmargin)+wmargin)
         .attr('y1', 0)
         .attr('y2', 20)
-        .attr("stroke", "#000")
+        .attr("stroke", "#383835")
         .attr("stroke-width", 2);
 
       }
@@ -310,11 +310,7 @@
           .attr('y', 0)
           .attr('height', H)
           .attr('fill', function(d) {
-            var e = d / maxs;
-            var r = Math.floor(Math.max(0, 255 - e*255));
-            var g = Math.floor(Math.max(0, 255 - e*255));
-            var b = 255;
-            return 'rgb(' + r + ',' + g + ',' + b + ')';
+            return d3.interpolateRgb('#24282e', '#b7d3f6')(d / maxs);
           });
 
         // draw y axis: time
