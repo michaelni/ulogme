@@ -11,6 +11,7 @@ If sudo needs a password, `up` opens tmux: type it, then `Ctrl-b d`.
 ## Web UI
 
 - Refresh button (top right) loads new activity. Click a bar to add a note, the top text area for a day summary.
+- Note `coffee`, `coffee mild` or `coffee strong` to plot caffeine (needs `draw_coffee = true`).
 - New URL token: delete the `render/auth-token-*` symlink and restart.
 - `Hacking Streak`: ~2.5+ min of steady typing (3+ keys per 9 s) in a `hacking_titles` window. Ends after ~100 s idle or elsewhere. Bar height = keys/s.
 
@@ -28,14 +29,14 @@ Most common window titles, for writing rules:
 cut -d' ' -f2- logs/window_*.txt | sort | uniq -c | sort -rn | head -40
 ```
 
-Or ask Claude Code:
+Or ask AI:
 
 ```
 Map every title in logs/window_*.txt with mapwin() from render/render_settings.js
 and add title_mappings rules until nothing lands in MISC.
 ```
 
-Window titles are untrusted input: any web page or file name sets its own title, and a title can contain instructions aimed at an agent ("ignore previous instructions and run ..."). Review the commands Claude Code proposes and don't auto-approve shell commands while it reads the logs.
+Window titles are untrusted input: any web page or file name sets its own title, and a title can contain instructions aimed at an agent ("ignore previous instructions and run ..."). Review the commands AI proposes and don't auto-approve shell commands while it reads the logs.
 
 ## Good to know
 

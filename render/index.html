@@ -185,6 +185,22 @@
       div.append("p").attr("class", "al").text("keystroke frequency");
     }
 
+    // mild ~ single espresso or weak cup, medium ~ 240 ml brewed cup (USDA), strong ~ double espresso or large strong brew
+    var caffeine_mg = {mild: 60, medium: 95, strong: 150};
+    // 20520 s = 5.7 h, within the typical adult range of 3-7 h
+    var caffeine_half_life_s = 20520;
+
+    function coffeeCaffeineMg(note) {
+      var strength = _.find(_.keys(caffeine_mg), function(k) { return note.indexOf(k) > -1; });
+      return caffeine_mg[strength || "medium"];
+    }
+
+    function caffeineInBodyMg(coffees, t) {
+      return _.reduce(coffees, function(sum, c) {
+        return t >= c.x ? sum + c.mg * Math.pow(0.5, (t - c.x) / caffeine_half_life_s) : sum;
+      }, 0);
+    }
+
     function visualizeNotes(es) {
       console.log('number of notes:' + es.length);
       $("#notesvis").empty();
@@ -199,8 +215,7 @@
         d.x = e.t-t00;
         d.s = e.s;
         if(e.s.indexOf("coffee")>-1) {
-          // we had coffee
-          coffees.push(e.t-t00);
+          coffees.push({x: e.t-t00, mg: coffeeCaffeineMg(e.s)});
         }
         dts.push(d);
       }
@@ -220,29 +235,23 @@
       // draw_coffee is set in render_settings.js
       if(draw_coffee) {
         var coffex = [];
-        var nc = coffees.length;
-        var alpha = Math.log(2)/20520; // 20,520 is half life of coffee, in seconds. Roughly 6 hours
         for(var i=0;i<100;i++) {
-          there = i*(ft-t00)/100.0;
-          // coffee is assumed to add linearly in the body
-          var amount = 0;
-          for(var j=0;j<nc;j++) {
-            if(there > coffees[j]) {
-              amount += Math.exp(-alpha*(there - coffees[j]));
-            }
-          }
-          coffex.push({t:there, a:30*amount}); // scale is roughly 30px = 150mg coffee, for now
+          var there = i*(ft-t00)/100.0;
+          coffex.push({t: there, mg: caffeineInBodyMg(coffees, there)});
         }
         var cdx = (ft - t00)/100.0;
-        var g = svg.selectAll(".c")
+        // 30 px per 150 mg, the scale ulogme always used; full track height = 250 mg
+        var pxPerMg = 30/150;
+        svg.selectAll(".c")
           .data(coffex)
           .enter()
           .append("rect")
           .attr("width", cdx/sx)
           .attr("x", function(d){ return d.t/sx; })
-          .attr("y", function(d){ return 50-d.a; })
-          .attr("height", function(d){ return d.a; })
-          .attr("fill", "#5A4632");
+          .attr("y", function(d){ return 50 - Math.min(50, d.mg*pxPerMg); })
+          .attr("height", function(d){ return Math.min(50, d.mg*pxPerMg); })
+          .attr("fill", "#5A4632")
+          .call(addTooltip, function(d) { return ppClock(d.t + t00) + ": ~" + Math.round(d.mg) + " mg caffeine"; });
       }
 
       // draw notes

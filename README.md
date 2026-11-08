@@ -1,6 +1,8 @@
 
 # ulogme
 
+For a short usage summary see [README_short.md](README_short.md).
+
 ## Fork differences
 
 The original https://github.com/karpathy/ulogme has a few bugs and is since 10 years sadly unmaintained.
@@ -17,7 +19,7 @@ This fixes:
 - python 3.13+ support (no longer uses the removed cgi module)
 
 This adds:
-- `ctrl.sh`: a single entry point for all commands (`./ctrl.sh <command>`), replacing the separate shell scripts
+- `ctrl.sh`: a single entry point (`./ctrl.sh up|down|keyfreq|logactivewin|logdesktop|note|serve`), replacing the separate shell scripts
 - private_titles file (simple list of window titles you want never logged; created from private_titles.example on first run, not tracked by git)
 - basic path based authentication (enabled by default)
 - basic Sec-Fetch-Site / same-origin checks
@@ -45,32 +47,16 @@ See a blog post (along with multiple screenshots) describing the project [here.]
 **To start recording**
 
 1. Clone the repository to some folder: `$ git clone https://github.com/michaelni/ulogme.git`
-2. Make sure you have Python 3 (`python3`); ulogme does not support Python 2. If you're on Ubuntu, make sure you have the dependencies: `$ sudo apt-get install python3 xdotool kbd x11-xserver-utils` (`kbd` provides `showkey`, `x11-xserver-utils` provides `xset`, used to treat a turned-off monitor as a locked screen). On Fedora, you may also need `sudo yum install gnome-screensaver`.
-3. `cd` inside and run `$ ./ctrl.sh up` on Linux, or `$ ./osx/run_ulogme_osx.sh` on OSX (on Linux this needs sudo for the `showkey` command). This starts two recorders in the background. One records the frequency of keystrokes and the other records active window titles. Both write their logs into log files in the `logs/` directory. Every log file is very simply just the unix time stamp followed by data, one per line. You can also start them separately with `$ ./ctrl.sh keyfreq` and `$ ./ctrl.sh logactivewin`. Only `showkey` runs as root; `keyfreq` asks for sudo itself and writes the logs as your user. `up` makes the ulogme folder private (`chmod 700`), and new files are created readable only by you.
-
-   `up` also starts the web UI, all in a background tmux session (requires `tmux`), and returns your terminal; `$ ./ctrl.sh down` stops everything. If sudo needs a password, `up` opens the tmux window of the keystroke logger: type your password there, then detach with `Ctrl-b d` and `up` continues. To look at the running processes later, use `$ tmux -L ulogme attach -t ulogme`.
+2. If you're on Ubuntu, make sure you have the dependencies: `$ sudo apt-get install python3 tmux xdotool kbd x11-xserver-utils`. On Fedora, you may also need `sudo yum install gnome-screensaver`.
+3. `cd` inside and run `$ ./ctrl.sh up` (note: this will ask you for sudo authentication which is required for `showkey` command; if a password is needed, type it in the tmux window that opens, then detach with `Ctrl-b d`). This will launch two scripts and the web UI in a background tmux session (`$ tmux -L ulogme attach -t ulogme`); `$ ./ctrl.sh down` stops them. One records the frequency of keystrokes and the other records active window titles. Both write their logs into log files in the `logs/` directory. Every log file is very simply just the unix time stamp followed by data, one per line. `up` makes the ulogme folder private (`chmod 700`). On OSX run `$ ./osx/run_ulogme_osx.sh` instead.
 4. For **OSX** only: there might be an additional step where you have to go to System Preferences > Security & Privacy > Accessibility, and make sure that Terminal (or iTerm2, or whatever you use to launch ulogme) is checked. If it wasn't checked previously and you just checked it, you may need to restart ulogme. If you don't do this step, you might find that window logging works but keypress logging doesn't.
 5. As of Mac OS 10.14 there is an additional permission that needs to be granted to the shell script in order to count keystrokes. To do so, go to System Preferences > Security & Privacy > Input Monitoring, add ulogme/osx/dist/ulogme_osx and make sure it is checked off. Lock the settings, and restart the script and keystrokes should begin to get recorded.
 
 **The user interface**
 
-1. On its first start, `./ctrl.sh serve` (or `up`) creates your own settings file `render/render_settings.js` from `render/render_settings_example.js`. In this file modify everything to your own preferences. Follow the provided example to specify title mappings: A raw window title comes in, and we match it against regular expressions to determine what type of activity it is. For example, the code would convert "Google Chrome - some cool website" into just "Google Chrome". Follow the provided example and read the comments for all settings in the file.
-2. Once that's set up, start the web server viewer: `$ ./ctrl.sh serve`, and go to the address it prints (for example `http://localhost:8124/auth-token-.../index.html`) in your browser. Hit the refresh button on top right every time you'd like to refresh the results based on most recently recorded activity
+1. **Important**. On its first start, `./ctrl.sh serve` copies `render/render_settings_example.js` to your own `render/render_settings.js` settings file. In this file modify everything to your own preferences. Follow the provided example to specify title mappings: A raw window title comes in, and we match it against regular expressions to determine what type of activity it is. For example, the code would convert "Google Chrome - some cool website" into just "Google Chrome". Follow the provided example and read the comments for all settings in the file.
+2. Once that's set up, start the web server viewer: `$ ./ctrl.sh serve`, and go to to the provided address (for example `http://localhost:8124/auth-token-.../index.html`) in your browser. Hit the refresh button on top right every time you'd like to refresh the results based on most recently recorded activity
 3. If your data isn't loading, try to explicitly run `$ python3 ulogme.py export` and then hit refresh. This should only be an issue the very first time you run ulogme.
-
-## ctrl.sh commands
-
-Run every command from the repository root as `./ctrl.sh <command>`:
-
-| Command | What it does |
-|---|---|
-| `up [port]` | Start keystroke logging, window logging and the web UI in a background tmux session, then print the web UI address |
-| `down` | Stop everything started by `up` |
-| `keyfreq` | Record keystroke frequency (asks for sudo to run `showkey`) |
-| `logactivewin` | Record active window titles |
-| `logdesktop` | Take a screenshot every minute into `desktopscr/` (needs `scrot`) |
-| `note [time]` | Add a note for now, or for the given unix time |
-| `serve [port]` | Start the web UI (default port 8124) |
 
 ## User Interface
 
@@ -80,6 +66,7 @@ The user interface can switch between a single day view and an overview view by 
 
 - You can enter a reminder "blog" on top if you'd like to summarize the day for yourself or enter other memos.
 - Click on any bar in the *barcode view* to enter a custom (short) note snippet for the time when the selected activity began. I use this to mark meetings, track my coffee/food intake, sleep time, or my total time spent running/swimming/gym or to leave notes for certain patterns of activity, etc. These could all later be correlated with various measures of productivity, in future.
+- A note containing `coffee` (optionally `coffee mild`, `coffee medium` or `coffee strong`: ~60, 95 or 150 mg caffeine, default medium) is drawn as caffeine in the body under the Notes row when `draw_coffee` is on in `render_settings.js` (5.7 h half-life; 30 px per 150 mg, full height = 250 mg).
 
 #### Overview page
 
