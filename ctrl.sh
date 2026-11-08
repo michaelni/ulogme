@@ -1,25 +1,51 @@
 #!/bin/bash
 set -euo pipefail
 shopt -s inherit_errexit
+umask 077
 
 cd "$(dirname "$0")"
+
+# a day starts at 7am, so late-night activity counts toward the previous day
+function _day_start() {
+    local t=${1:-$(date +%s)} day
+    day=$(date -d "@$t" +%F)
+    if (( $(date -d "@$t" +%-H) < 7 )); then
+        day=$(date -d "$day -1 day" +%F)
+    fi
+    date -d "$day 07:00" +%s
+}
+
+function _count_key_releases() {
+    while true; do
+        # the parallel sleep keeps the 9 second window even if showkey exits early
+        echo $({ timeout 9 showkey & sleep 9; wait; } | grep -c release) || return
+    done
+}
 
 function keyfreq() {
     local num logfile
     LANG=en_US.utf8
     mkdir -p logs
 
-    while true; do
-        # the parallel sleep keeps the 9 second window even if showkey exits early
-        num=$({ timeout 9 showkey & sleep 9; wait; } | grep -c release || true)
-        logfile="logs/keyfreq_$(python3 rewind7am.py).txt"
+    sudo ./ctrl.sh _count_key_releases | while read -r num; do
+        logfile="logs/keyfreq_$(_day_start).txt"
         echo "$(date +%s) $num" >> "$logfile"
         echo "logged key frequency: $(date) $num release events detected into $logfile"
     done
 }
 
 function _is_private_title() {
-    [[ -n "$1" ]] && grep -qEf <(grep -vE '^(#|[[:space:]]*$)' private_titles | tr -d '\r') <<< "$1"
+    [[ -n "$1" ]] || return 1
+    [[ -r private_titles ]] || return 2
+    grep -qEf <(grep -vE '^(#|[[:space:]]*$)' private_titles | tr -d '\r') <<< "$1"
+}
+
+function _is_loggable_title() {
+    local status=0
+    _is_private_title "$1" || status=$?
+    (( status == 1 )) && return 0
+    (( status == 2 )) && echo "private_titles is missing or has an invalid regex, not logging window titles" >&2
+    return 1
 }
 
 function _is_monitor_off() {
@@ -50,8 +76,8 @@ function _is_screen_locked() {
 }
 
 function _active_window_title() {
-    local id=$(xdotool getactivewindow)
-    wmctrl -lpG | while read -a a; do w=${a[0]}; if (($((16#${w:2}))==id)) ; then echo "${a[@]:8}"; break; fi; done
+    local title=$(xdotool getactivewindow getwindowname 2> /dev/null) || true
+    echo "${title//[$'\n\r']/ }"
 }
 
 function logactivewin() {
@@ -59,6 +85,7 @@ function logactivewin() {
     LANG=en_US.utf8
     mkdir -p logs
     [[ -e private_titles ]] || cp private_titles.example private_titles
+    _is_private_title x || (( $? != 2 )) || { echo "invalid regex in private_titles" >&2; exit 1; }
 
     while true; do
         if _is_screen_locked; then
@@ -67,8 +94,8 @@ function logactivewin() {
             curtitle=$(_active_window_title)
         fi
 
-        if [[ "$curtitle" != "$lasttitle" ]] && ! _is_private_title "$curtitle"; then
-            logfile="logs/window_$(python3 rewind7am.py).txt"
+        if [[ "$curtitle" != "$lasttitle" ]] && _is_loggable_title "$curtitle"; then
+            logfile="logs/window_$(_day_start).txt"
             echo "$(date +%s) $curtitle" >> "$logfile"
             echo "logged window title: $(date) $curtitle into $logfile"
             lasttitle="$curtitle"
@@ -112,23 +139,15 @@ function note() {
     mkdir -p logs
     read -rp "Enter note: " n
 
-    local logfile="logs/notes_$(python3 rewind7am.py "$T").txt"
+    local logfile="logs/notes_$(_day_start "$T").txt"
     echo "$T $n" >> "$logfile"
     echo "logged note: $T $n into $logfile"
 }
 
 function serve() {
     [[ -e render/render_settings.js ]] || cp render/render_settings_example.js render/render_settings.js
-    python3 export_events.py
-    python3 ulogme_serve.py "$@"
-}
-
-function export_events() {
-    python3 export_events.py
-}
-
-function legacy_split_events() {
-    python3 legacy_split_events.py
+    python3 ulogme.py export
+    python3 ulogme.py serve "$@"
 }
 
 function _tmux() {
@@ -143,11 +162,10 @@ function up() {
         return 0
     fi
 
-    # keyfreq runs as root and would otherwise create logs/ owned by root
-    mkdir -p logs
+    chmod 700 .
 
     _tmux new-session -d -s ulogme -n keys -c "$PWD" \
-        "echo 'Enter your sudo password if asked, then detach with Ctrl-b d'; sudo ./ctrl.sh keyfreq" \; \
+        "echo 'Enter your sudo password if asked, then detach with Ctrl-b d'; ./ctrl.sh keyfreq" \; \
         set-option -g remain-on-exit on
     _tmux new-window -d -t ulogme -n windows -c "$PWD" "./ctrl.sh logactivewin"
     _tmux new-window -d -t ulogme -n web -c "$PWD" "./ctrl.sh serve $port"

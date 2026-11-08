@@ -267,7 +267,6 @@
       addTooltip(g, function(d) { return ppClock(d.x + t00) + " " + d.s; });
     }
 
-    var clicktime;
     function visualizeEvent(es, filter) {
 
       var dts = [];
@@ -357,7 +356,6 @@
     function statEvents(es) {
       if(es.length === 0) return;
 
-      var t0 = es[0].t;
       var ixprev = 0;
       for(var i=1,N=es.length;i<N;i++) {
         var e = es[i];
@@ -431,7 +429,6 @@
         visualizeEvents(events);
         writeHeader();
         createPieChart(events, etypes);
-        computeKeyStats(events, key_events);
         hacking_stats = computeHackingStats(events, key_events, hacking_titles);
         visualizeHackingTimes(hacking_stats);
         key_stats = computeKeyStats(events, key_events);
