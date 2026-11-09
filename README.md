@@ -1,6 +1,8 @@
 
 # ulogme
 
+For a short usage summary see [README_short.md](README_short.md).
+
 ## Fork differences
 
 The original https://github.com/karpathy/ulogme has a few bugs and is since 10 years sadly unmaintained.
@@ -14,14 +16,13 @@ This fixes:
 - Fix window title logging on Cinnamon 18 (by Ilija Ilievski)
 - not storing detailed keypresses to disk, the intermediate file with detailed keypressed is no more
 - minor bugfixes
+- python 3.13+ support (no longer uses the removed cgi module)
 
 This adds:
-- private_titles file (simple list of window titles you want never logged)
+- `ctrl.sh`: a single entry point (`./ctrl.sh up|down|keyfreq|logactivewin|logdesktop|note|serve`), replacing the separate shell scripts
+- private_titles file (simple list of window titles you want never logged; created from private_titles.example on first run, not tracked by git)
 - basic path based authentication (enabled by default)
 - basic Sec-Fetch-Site / same-origin checks
-
-TODO:
-- python 3.13+ drops cgi
 
 ## Original README: (with links updated)
 
@@ -46,16 +47,16 @@ See a blog post (along with multiple screenshots) describing the project [here.]
 **To start recording**
 
 1. Clone the repository to some folder: `$ git clone https://github.com/michaelni/ulogme.git`
-2. If you're on Ubuntu, make sure you have the dependencies: `$ sudo apt-get install xdotool wmctrl`. On Fedora, you may also need `sudo yum install gnome-screensaver`.
-3. `cd` inside and run `$ ./ulogme.sh` (note: this will ask you for sudo authentication which is required for `showkey` command). This will launch two scripts. One records the frequency of keystrokes and the other records active window titles. Both write their logs into log files in the `logs/` directory. Every log file is very simply just the unix time stamp followed by data, one per line.
+2. If you're on Ubuntu, make sure you have the dependencies: `$ sudo apt-get install python3 tmux xdotool kbd x11-xserver-utils`. On Fedora, you may also need `sudo yum install gnome-screensaver`.
+3. `cd` inside and run `$ ./ctrl.sh up` (note: this will ask you for sudo authentication which is required for `showkey` command; if a password is needed, type it in the tmux window that opens, then detach with `Ctrl-b d`). This will launch two scripts and the web UI in a background tmux session (`$ tmux -L ulogme attach -t ulogme`); `$ ./ctrl.sh down` stops them. One records the frequency of keystrokes and the other records active window titles. Both write their logs into log files in the `logs/` directory. Every log file is very simply just the unix time stamp followed by data, one per line. `up` makes the ulogme folder private (`chmod 700`). On OSX run `$ ./osx/run_ulogme_osx.sh` instead.
 4. For **OSX** only: there might be an additional step where you have to go to System Preferences > Security & Privacy > Accessibility, and make sure that Terminal (or iTerm2, or whatever you use to launch ulogme) is checked. If it wasn't checked previously and you just checked it, you may need to restart ulogme. If you don't do this step, you might find that window logging works but keypress logging doesn't.
 5. As of Mac OS 10.14 there is an additional permission that needs to be granted to the shell script in order to count keystrokes. To do so, go to System Preferences > Security & Privacy > Input Monitoring, add ulogme/osx/dist/ulogme_osx and make sure it is checked off. Lock the settings, and restart the script and keystrokes should begin to get recorded.
 
 **The user interface**
 
-1. **Important**. As a one-time setup, copy over the example settings file to your own copy: `$ cp render/render_settings_example.js render/render_settings.js` to create your own `render_settings.js` settings file. In this file modify everything to your own preferences. Follow the provided example to specify title mappings: A raw window title comes in, and we match it against regular expressions to determine what type of activity it is. For example, the code would convert "Google Chrome - some cool website" into just "Google Chrome". Follow the provided example and read the comments for all settings in the file.
-2. Once that's set up, start the web server viewer: `$ python ulogme_serve.py`, and go to to the provided address) for example `http://localhost:8123`) in your browser. Hit the refresh button on top right every time you'd like to refresh the results based on most recently recorded activity
-3. If your data isn't loading, try to explicitly run `python export_events.py` and then hit refresh. This should only be an issue the very first time you run ulogme.
+1. **Important**. On its first start, `./ctrl.sh serve` copies `render/render_settings_example.js` to your own `render/render_settings.js` settings file. In this file modify everything to your own preferences. Follow the provided example to specify title mappings: A raw window title comes in, and we match it against regular expressions to determine what type of activity it is. For example, the code would convert "Google Chrome - some cool website" into just "Google Chrome". Follow the provided example and read the comments for all settings in the file.
+2. Once that's set up, start the web server viewer: `$ ./ctrl.sh serve`, and go to to the provided address (for example `http://localhost:8124/auth-token-.../index.html`) in your browser. Hit the refresh button on top right every time you'd like to refresh the results based on most recently recorded activity
+3. If your data isn't loading, try to explicitly run `$ python3 ulogme.py export` and then hit refresh. This should only be an issue the very first time you run ulogme.
 
 ## User Interface
 
@@ -65,6 +66,7 @@ The user interface can switch between a single day view and an overview view by 
 
 - You can enter a reminder "blog" on top if you'd like to summarize the day for yourself or enter other memos.
 - Click on any bar in the *barcode view* to enter a custom (short) note snippet for the time when the selected activity began. I use this to mark meetings, track my coffee/food intake, sleep time, or my total time spent running/swimming/gym or to leave notes for certain patterns of activity, etc. These could all later be correlated with various measures of productivity, in future.
+- A note containing `coffee` (optionally `coffee mild`, `coffee medium` or `coffee strong`: ~60, 95 or 150 mg caffeine, default medium) is drawn as caffeine in the body under the Notes row when `draw_coffee` is on in `render_settings.js` (5.7 h half-life; 30 px per 150 mg; the row grows taller when caffeine exceeds 250 mg).
 
 #### Overview page
 
@@ -73,19 +75,18 @@ The user interface can switch between a single day view and an overview view by 
 
 ## Known issues
 - One Ubuntu user reported broken view with no data. On further inspection we found that the logs were corrupt. One of the lines in a file in `/logs` was, instead of looking as `{timestamp} {data}`  looked as `@@@@@@@{timestamp} {data}`, in other words an odd character was appended to the timestamp somehow. We manually erased these characters from the log file to fix the issue.
-- Legacy code note: if you used ulogme from before 28 July, you will have to run `$ python legacy_split_events.py` to convert your events files, once.
-- You may see *"address already in use"* if you try to run `python ulogme_serve.py`. Sometimes the system can get confused and takes a while to update what ports are being used. Use the optional argument to specify a different port, for example `python ulogme_serve.py 8124` and then go to `http://localhost:8124` instead, for example.
+- You may see *"address already in use"* if you try to run `./ctrl.sh serve`. Sometimes the system can get confused and takes a while to update what ports are being used. Use the optional argument to specify a different port, for example `./ctrl.sh serve 8125` and then go to `http://localhost:8125/auth-token-.../index.html` instead, for example.
 - Overview page is blank. Are you sure your browser supports ECMAScript 6? Chrome should be fine, Firefox might not be, yet. 
 
 ## Contributing
 
-The Ubuntu and OSX code base are a little separate on the data collection side. However, they each just record very simple log files in `/logs`. Once the log files are written, `export_events.py` takes the log files, does some simple processing and writes the results into `.json` files in `/render`. The Javascript/HTML/CSS UI codebase is all common and all lives in `/render`.
+The Ubuntu and OSX code base are a little separate on the data collection side. However, they each just record very simple log files in `/logs`. Once the log files are written, `ulogme.py export` takes the log files, does some simple processing and writes the results into `.json` files in `/render`. The Javascript/HTML/CSS UI codebase is all common and all lives in `/render`.
 
 ### Ubuntu
 ulogme has three main parts: 
 
-1. Recording scripts `keyfreq.sh` and `logactivewin.sh`. You probably won't touch these.
-2. Webserver: `ulogme_serve.py` which wraps Python's `SimpleHTTPServer` and does some basic communication with the UI. For example, the UI can ask the server to write a note to a log file, or for a refresh.
+1. Recording functions `keyfreq` and `logactivewin` in `ctrl.sh`. You probably won't touch these.
+2. Webserver: `ulogme.py serve` which wraps Python's `SimpleHTTPServer` and does some basic communication with the UI. For example, the UI can ask the server to write a note to a log file, or for a refresh.
 3. The UI. Majority of the codebase is here, reading the `.json` files in `/render` and creating the visualizations. There are several common `.js` files, and crucially the `index.html` and `overview.html` files. I expect that most people might be able to contribute here to add features/cleanup/bugfix.
 
 ### OSX code

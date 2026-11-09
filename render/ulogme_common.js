@@ -1,14 +1,83 @@
 // Common utility functions
 // TODO: Expand this out, make everything more modular and cleaner
 
-// builds a dictionary of string -> color, in HSL format
+// first 8 hues validated for colorblind separation of neighbours on the dark surface; the rest picked to maximise distance from all others
+var series_palette = [
+  "#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#eecc00", "#1fa3c4",
+  "#55ee99", "#88bb22", "#eebbcc", "#66ddff",
+];
+var fallback_series_color = "#898781";
+
 function colorHashStrings(arr) {
+  var all = _.union(_.flatten(display_groups), arr);
   var color_hash = {};
-  for(var i=0,N=arr.length;i<N;i++) {
-    var title = arr[i];
-    color_hash[title] = "hsl(" + Math.floor((i+0.5)/N * 360) + ",100%,60%)";
-  }
+  all.forEach(function(m, i) {
+    color_hash[m] = i < series_palette.length ? series_palette[i] : fallback_series_color;
+  });
   return color_hash;
+}
+
+function appendSwatchLabel(d3parent, tag, color, text) {
+  var el = d3parent.append(tag);
+  el.append("span").attr("class", "swatch").style("background-color", color);
+  el.append("span").text(text);
+  return el;
+}
+
+var tooltip_div;
+function tooltipDiv() {
+  if(!tooltip_div) {
+    tooltip_div = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("z-index", "10")
+      .style("visibility", "hidden");
+  }
+  return tooltip_div;
+}
+
+function showTooltip(text) {
+  tooltipDiv().style("visibility", "visible").text(text)
+    .style("top", (d3.event.pageY-10)+"px").style("left", (d3.event.pageX+10)+"px");
+}
+
+function hideTooltip() {
+  tooltipDiv().style("visibility", "hidden");
+}
+
+function addTooltip(selection, textFn) {
+  selection
+    .on("mouseover.tooltip", function(d, i) { showTooltip(textFn(d, i)); })
+    .on("mousemove.tooltip", function(d, i) { showTooltip(textFn(d, i)); })
+    .on("mouseout.tooltip", hideTooltip);
+}
+
+function addLineTooltip(svg, width, height, points, xFn, textFn) {
+  var xs = points.map(xFn);
+  var guide = svg.append("line")
+    .attr("y1", 0).attr("y2", height)
+    .attr("stroke", "#898781")
+    .style("visibility", "hidden");
+  svg.append("rect")
+    .attr("width", width).attr("height", height)
+    .attr("fill", "none")
+    .style("pointer-events", "all")
+    .on("mousemove", function() {
+      var mx = d3.mouse(this)[0];
+      var i = Math.min(d3.bisectLeft(xs, mx), xs.length-1);
+      if(i > 0 && mx - xs[i-1] < xs[i] - mx) i--;
+      guide.attr("x1", xs[i]).attr("x2", xs[i]).style("visibility", "visible");
+      showTooltip(textFn(points[i], i));
+    })
+    .on("mouseout", function() {
+      guide.style("visibility", "hidden");
+      hideTooltip();
+    });
+}
+
+function ppClock(t) {
+  var d = new Date(t * 1000);
+  return d.getHours() + ":" + ("0" + d.getMinutes()).slice(-2);
 }
 
 // utility that looks at the URL of current page and sets QueryString

@@ -49,9 +49,9 @@ var d3utils = {};
     g.append("path")
       .attr("d", arc)
       .style("fill", function(d) { return d.data.col; });
+    addTooltip(g, function(d) { return getopt(chart_data, 'tooltip', function(x) { return x.name; })(d.data); });
 
     g.append("text")
-      .attr("fill", function(d) { return d.data.col; })
       .attr("transform", function(d) { 
         var c = arc.centroid(d);
         var x = c[0];
@@ -109,6 +109,7 @@ var d3utils = {};
     g.append("text")
       .attr("transform", function(d, i) { return "translate(" + (d.val * sx + textmargin) + "," + ((i+1) * bh - textoffy) + ")"; })
       .text(function(d) { return d.text });   
+    addTooltip(g, getopt(chart_data, 'tooltip', function(d) { return d.text; }));
   }
 
   // exports

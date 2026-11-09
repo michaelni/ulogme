@@ -6,7 +6,7 @@
     <title>ulogme</title>
 
     <link rel="icon" href="favicon.ico">
-    <link href='http://fonts.googleapis.com/css?family=Lato:300,400,900' rel='stylesheet' type='text/css'>
+    <link href='font_lato.css' rel='stylesheet' type='text/css'>
     <link href='overview_style.css' rel='stylesheet' type='text/css'>
 
     <script src="jquery-1.8.3.min.js"></script>
@@ -30,7 +30,7 @@
       var ldiv = d3div.append("div").attr('class', 'legenddiv');
 
       for(var i=0;i<etypes.length;i++) {
-        var pi = ldiv.append('p').text(etypes[i]).attr('style', 'color:' + color_hash[etypes[i]]);
+        var pi = appendSwatchLabel(ldiv, 'p', color_hash[etypes[i]], etypes[i]);
 
         var m = etypes[i];
         if(skipdraw[m]) { pi.attr('class', 'skipdrawyes'); }
@@ -73,7 +73,7 @@
           .attr("x2", width + margin.left)
           .attr("y1", yy)
           .attr("y2", yy)
-          .attr("stroke", "#EEE")
+          .attr("stroke", "#2c2c2a")
           .attr("stroke-width", 1);
 
         yn++;
@@ -91,7 +91,7 @@
           var x = margin.left + i * dsz;
           var y = height + margin.top + 3;
           return "translate(" + x + "," + y + ")rotate(90)";})
-        .attr("fill", "#333")
+        .attr("fill", "#c3c2b7")
         .attr("font-family", "arial")
         .attr("font-size", "14px")
         .text(function(d) { var dobj = new Date(d.t0 * 1000); return ppDateShort(dobj); })
@@ -104,7 +104,7 @@
         .attr("stroke", function(d) { 
           var dobj = new Date(d.t0 * 1000); 
           var isMonday = dobj.getDay() === 1;
-          return isMonday ? "#BBB" : "#EEE"
+          return isMonday ? "#5a5955" : "#2c2c2a"
         })
         .attr('x1', function(d, i) { return margin.left + i * dsz; })
         .attr('x2', function(d, i) { return margin.left + i * dsz; })
@@ -120,7 +120,9 @@
           if(skipdraw[m]) continue; // skip!
           dtimes.push({
             val: edur[k].hasOwnProperty(m) ? edur[k][m] : 0,
-            col: color_hash[m]
+            col: color_hash[m],
+            name: m,
+            day: ppDateShort(new Date(event_list[k].t0 * 1000))
           });
         }
 
@@ -142,6 +144,7 @@
           .attr("x", margin.left + k * dsz)
           .attr("y", function(d) { gh += d.val; return height + margin.top - gh * yscale; })
           .attr("fill", function(d) { return d.col; } );
+        addTooltip(svgg.selectAll("rect"), function(d) { return d.day + ", " + d.name + ": " + (d.val/60/60).toFixed(2) + "hr"; });
       }
     }
 
@@ -161,7 +164,6 @@
     function statEvents(es, ecounts) {
       if(es.length === 0) return; // empty case
 
-      var t0 = es[0].t;
       var ixprev = 0;
       for(var i=1,N=es.length;i<N;i++) {
         var e = es[i];
@@ -211,6 +213,11 @@
       var maxs = 0;
       var maxktot = 0;
       var kevents_global = [];
+      var binLabel = function(i) {
+        var minutes = 7*60 + i*time_bin/60;
+        var clock = function(m) { return Math.floor(m/60) % 24 + ":" + ("0" + m%60).slice(-2); };
+        return clock(minutes) + " to " + clock(minutes + time_bin/60);
+      };
       var max_kevents_global = 0;
       var sum_kevents_global = 0;
       for(var k=0;k<events.length;k++) {
@@ -268,6 +275,8 @@
         .datum(kevents_global)
         .attr("class", "line")
         .attr("d", line);
+      addLineTooltip(svg, W, H*2, kevents_global, function(d,i) { return (W - 2*wmargin) * i / sx + wmargin; },
+        function(d, i) { return binLabel(i) + ": " + d + " keys over all days"; });
 
       // draw x axis: times of the day
       var div = d3.select("#keystats").append("div");
@@ -286,7 +295,7 @@
         .attr('x2', q/24*(W-2*wmargin)+wmargin)
         .attr('y1', 0)
         .attr('y2', 20)
-        .attr("stroke", "#000")
+        .attr("stroke", "#383835")
         .attr("stroke-width", 2);
 
       }
@@ -310,12 +319,11 @@
           .attr('y', 0)
           .attr('height', H)
           .attr('fill', function(d) {
-            var e = d / maxs;
-            var r = Math.floor(Math.max(0, 255 - e*255));
-            var g = Math.floor(Math.max(0, 255 - e*255));
-            var b = 255;
-            return 'rgb(' + r + ',' + g + ',' + b + ')';
-          });
+            return d3.interpolateRgb('#24282e', '#b7d3f6')(d / maxs);
+          })
+          .call(addTooltip, function(day) {
+            return function(d, i) { return day + ", " + binLabel(i) + ": " + d + " keys"; };
+          }(ppDateShort(d0s[k])));
 
         // draw y axis: time
         svg.append('text')
@@ -330,7 +338,8 @@
           .attr('y', 0)
           .attr('width', function(d) { return ktots[k]/maxktot * wmargin; })
           .attr('height', H)
-          .attr('fill', 'rgb(255, 100, 100)');
+          .attr('fill', 'rgb(255, 100, 100)')
+          .call(addTooltip, function(text) { return function() { return text; }; }(ppDateShort(d0s[k]) + ": " + ktots[k] + " keys in total"));
 
         svg.append('text')
           .attr('transform', 'translate(' + (W - wmargin + 7) + ', ' + 13 + ')')
@@ -339,7 +348,6 @@
           .text(ktots[k]);
       }
 
-      var kevents_global
       div.append('p').text('total keys pressed: ' + sum_kevents_global + ' in ' + events.length + ' days (' + Math.floor(sum_kevents_global/events.length) + ' per day average)');
     }
 
@@ -407,6 +415,7 @@
       chart_data.textpad = 300;
       chart_data.textmargin = 10;
       chart_data.title = 'total keys per window';
+      chart_data.tooltip = function(d) { return d.name + ': ' + d.val + ' keys over ' + n + ' days'; };
       chart_data.data = gstats;
       d3utils.drawHorizontalBarChart(d3.select('#keysummary'), chart_data);
     }
@@ -437,6 +446,7 @@
       chart_data.textpad = 300;
       chart_data.textmargin = 10;
       chart_data.title = 'total time per window';
+      chart_data.tooltip = function(d) { return d.name + ': ' + (d.val/60/60).toFixed(2) + 'hr over ' + n + ' days'; };
       chart_data.data = gstats;
       d3utils.drawHorizontalBarChart(d3.select('#timesummary'), chart_data);
     }

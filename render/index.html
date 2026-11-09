@@ -50,6 +50,7 @@
       chart_data.width = $(window).width();
       chart_data.height = 500;
       chart_data.title = "Total Time: " + strTimeDelta(dtall);
+      chart_data.tooltip = function(d) { return d.name + ": " + strTimeDelta(d.val); };
       chart_data.data = stats;
       d3utils.drawPieChart(d3.select('#piechart'), chart_data);
     }
@@ -60,13 +61,44 @@
       _.each(display_groups, function(x) { visualizeEvent(es, x); })
     }
 
+    function drawTimeTrack(svg, W, track_height) {
+      var sx = (ft-t00) / W;
+      svg.append("rect")
+        .attr("x", 0).attr("y", 0)
+        .attr("width", W).attr("height", track_height)
+        .attr("fill", "#232322");
+
+      var d0 = new Date(t00 * 1000);
+      d0.setMinutes(0);
+      d0.setSeconds(0);
+      d0.setMilliseconds(0);
+      for(var t = d0.getTime() / 1000 + 3600; t < ft; t += 3600) {
+        var x = (t-t00)/sx;
+        svg.append("line")
+          .attr("x1", x).attr("x2", x)
+          .attr("y1", 0).attr("y2", track_height)
+          .attr("stroke", "#383835");
+      }
+
+      [0.5, W-0.5].forEach(function(x) {
+        svg.append("line")
+          .attr("x1", x).attr("x2", x)
+          .attr("y1", 0).attr("y2", track_height)
+          .attr("stroke", "#74736e");
+      });
+      svg.append("line")
+        .attr("x1", 0).attr("x2", W)
+        .attr("y1", track_height - 0.5).attr("y2", track_height - 0.5)
+        .attr("stroke", "#74736e");
+    }
+
     // uses global variable hacking_events as input. Must be set
     // and global total_hacking_time as well.
     function visualizeHackingTimes(hacking_stats) {
       $("#hackingvis").empty();
       if(!draw_hacking) return; // global set in render_settings.js
 
-      var c = "rgb(200,0,0)"; // color
+      var c = "rgb(240,70,70)"; // color
 
       var div = d3.select("#hackingvis").append("div");
       div.append("p").attr("class", "tt").attr("style", "color:"+c).text("Hacking Streak");
@@ -78,15 +110,14 @@
       var svg = div.append("svg")
       .attr("width", W)
       .attr("height", 30);
+      drawTimeTrack(svg, W, 30);
 
       var sx = (ft-t00) / W;
       var g = svg.selectAll(".h")
         .data(hacking_stats.events)
         .enter().append("g")
-        .attr("class", "h")
-        .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(strTimeDelta(d.dt));})
-        .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-        .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+        .attr("class", "h");
+      addTooltip(g, function(d) { return "Hacking " + ppClock(d.t0) + " to " + ppClock(d.t0 + d.dt) + ": " + strTimeDelta(d.dt); });
 
       g.append("rect")
         .attr("x", function(d) { return (d.t0-t00)/sx; } )
@@ -122,6 +153,7 @@
       chart_data.textpad = 300;
       chart_data.textmargin = 10;
       chart_data.title = "Total number of key strokes";
+      chart_data.tooltip = function(d) { return d.name + ": " + d.val + " keys"; };
       chart_data.data = stats;
       d3utils.drawHorizontalBarChart(d3.select('#keystats'), chart_data);
     }
@@ -134,8 +166,9 @@
 
       var div = d3.select("#keygraph").append("div");
       var svg = div.append("svg")
-      .attr("width", "100%")
+      .attr("width", W)
       .attr("height", 100);
+      drawTimeTrack(svg, W, 100);
 
       var sx = (ft-t00) / W;
       var line = d3.svg.line()
@@ -146,8 +179,26 @@
         .datum(es)
         .attr("class", "line")
         .attr("d", line);
+      addLineTooltip(svg, W, 100, es, function(d) { return (d.t - t00) / sx; },
+        function(d) { return ppClock(d.t) + ": " + d.s + " keys"; });
 
       div.append("p").attr("class", "al").text("keystroke frequency");
+    }
+
+    // mild ~ single espresso or weak cup, medium ~ 240 ml brewed cup (USDA), strong ~ double espresso or large strong brew
+    var caffeine_mg = {mild: 60, medium: 95, strong: 150};
+    // 20520 s = 5.7 h, within the typical adult range of 3-7 h
+    var caffeine_half_life_s = 20520;
+
+    function coffeeCaffeineMg(note) {
+      var strength = _.find(_.keys(caffeine_mg), function(k) { return note.indexOf(k) > -1; });
+      return caffeine_mg[strength || "medium"];
+    }
+
+    function caffeineInBodyMg(coffees, t) {
+      return _.reduce(coffees, function(sum, c) {
+        return t >= c.x ? sum + c.mg * Math.pow(0.5, (t - c.x) / caffeine_half_life_s) : sum;
+      }, 0);
     }
 
     function visualizeNotes(es) {
@@ -164,49 +215,50 @@
         d.x = e.t-t00;
         d.s = e.s;
         if(e.s.indexOf("coffee")>-1) {
-          // we had coffee
-          coffees.push(e.t-t00);
+          coffees.push({x: e.t-t00, mg: coffeeCaffeineMg(e.s)});
         }
         dts.push(d);
       }
 
       console.log('drawing ' + dts.length + ' notes.');
       var div = d3.select("#notesvis").append("div");
-      div.append("p").attr("class", "tt").attr("style", "color: #964B00").text("Notes");
+      div.append("p").attr("class", "tt").attr("style", "color: #D9954F").text("Notes");
       var W = $(window).width() - 40;
+      var sx = (ft-t00) / W;
+      var track_height = 50;
+
+      // draw_coffee is set in render_settings.js
+      var coffex = [];
+      if(draw_coffee) {
+        for(var i=0;i<100;i++) {
+          var there = i*(ft-t00)/100.0;
+          coffex.push({t: there, mg: caffeineInBodyMg(coffees, there)});
+        }
+      }
+      // 30 px per 150 mg, the scale ulogme always used
+      var pxPerMg = 30/150;
+      var peak_px = (d3.max(coffex, function(d) { return d.mg; }) || 0) * pxPerMg;
+      var overflow = Math.max(0, peak_px - track_height);
+
       var svg = div.append("svg")
       .attr("width", W)
-      .attr("height", 70);
+      .attr("height", 70 + overflow)
+      .append("g")
+      .attr("transform", "translate(0," + overflow + ")");
+      drawTimeTrack(svg, W, track_height);
 
-      var sx = (ft-t00) / W;
-
-      // Draw coffee. Overlay
-      // draw_coffee is set in render_settings.js
       if(draw_coffee) {
-        var coffex = [];
-        var nc = coffees.length;
-        var alpha = Math.log(2)/20520; // 20,520 is half life of coffee, in seconds. Roughly 6 hours
-        for(var i=0;i<100;i++) {
-          there = i*(ft-t00)/100.0;
-          // coffee is assumed to add linearly in the body
-          var amount = 0;
-          for(var j=0;j<nc;j++) {
-            if(there > coffees[j]) {
-              amount += Math.exp(-alpha*(there - coffees[j]));
-            }
-          }
-          coffex.push({t:there, a:30*amount}); // scale is roughly 30px = 150mg coffee, for now
-        }
         var cdx = (ft - t00)/100.0;
-        var g = svg.selectAll(".c")
+        svg.selectAll(".c")
           .data(coffex)
           .enter()
           .append("rect")
           .attr("width", cdx/sx)
           .attr("x", function(d){ return d.t/sx; })
-          .attr("y", function(d){ return 50-d.a; })
-          .attr("height", function(d){ return d.a; })
-          .attr("fill", "#E4CFBA");
+          .attr("y", function(d){ return track_height - d.mg*pxPerMg; })
+          .attr("height", function(d){ return d.mg*pxPerMg; })
+          .attr("fill", "#5A4632")
+          .call(addTooltip, function(d) { return ppClock(d.t + t00) + ": ~" + Math.round(d.mg) + " mg caffeine"; });
       }
 
       // draw notes
@@ -220,17 +272,17 @@
         .attr("width", 2)
         .attr("y", 0)
         .attr("height", 50)
-        .attr("fill", "#964B00");
+        .attr("fill", "#D9954F");
 
       g.append("text")
         .attr("transform", function(d,i) { return "translate(" + (d.x/sx+5) + "," + (10+15*(i%5)) + ")"; })
         .attr("font-family", "'Lato', sans-serif")
         .attr("font-size", 14)
-        .attr("fill", "#333")
+        .attr("fill", "#DDD")
         .text(function(d) { return d.s; } );
+      addTooltip(g, function(d) { return ppClock(d.x + t00) + " " + d.s; });
     }
 
-    var clicktime;
     function visualizeEvent(es, filter) {
 
       var dts = [];
@@ -267,7 +319,7 @@
 
         var filter_div = filters_div.append("div").attr("class", "fdiv");
         var c = filter_colors[q];
-        filter_div.append("p").attr("class", "tt").attr("style", "color:"+c).text(filter[q]);
+        appendSwatchLabel(filter_div, "p", c, filter[q]).attr("class", "tt");
         var txt = strTimeDelta(ttoti[q]);
         filter_div.append("p").attr("class", "td").text(txt);
       }
@@ -276,18 +328,16 @@
       var svg = div.append("svg")
       .attr("width", W)
       .attr("height", 70);
+      drawTimeTrack(svg, W, 50);
 
       var sx = (ft-t00) / W;
       var g = svg.selectAll(".e")
         .data(dts)
         .enter().append("g")
         .attr("class", "e")
-        .on("mouseover", function(d){return tooltip.style("visibility", "visible").text(d.s);})
-        .on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-        .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
         .on("click", function(d){ 
           $("#notesinfo").show(); 
-          $("#notesmsg").html("clicked event <b>" + d.s + "</b><br> Add note at time of this event:");
+          $("#notesmsg").empty().append("clicked event ", $("<b>").text(d.s), "<br>", " Add note at time of this event:");
           $("#notetext").focus()
           clicktime = d.x+t00;
           return 0; 
@@ -299,6 +349,7 @@
         .attr("y", 0)
         .attr("height", 50)
         .attr("fill", function(d) { return filter_colors[d.fix]; });
+      addTooltip(g, function(d) { return ppClock(d.x + t00) + " " + d.s; });
 
       // produce little axis numbers along the timeline
       var d0 = new Date(t00 * 1000);
@@ -311,7 +362,7 @@
           .attr("transform", "translate(" + [(t-t00)/sx, 70] + ")")
           .attr("font-family", "'Lato', sans-serif")
           .attr("font-size", 14)
-          .attr("fill", "#CCC")
+          .attr("fill", "#898781")
           .text(new Date(t * 1000).getHours());
         t += 3600;
       }
@@ -321,7 +372,6 @@
     function statEvents(es) {
       if(es.length === 0) return;
 
-      var t0 = es[0].t;
       var ixprev = 0;
       for(var i=1,N=es.length;i<N;i++) {
         var e = es[i];
@@ -395,7 +445,6 @@
         visualizeEvents(events);
         writeHeader();
         createPieChart(events, etypes);
-        computeKeyStats(events, key_events);
         hacking_stats = computeHackingStats(events, key_events, hacking_titles);
         visualizeHackingTimes(hacking_stats);
         key_stats = computeKeyStats(events, key_events);
@@ -409,20 +458,12 @@
     var key_events;
     var notes_events;
     var blog;
-    var tooltip;
     var event_list = [];
     var loaded = false;
     var cur_event_id = -1;
     var clicktime = 0;
     function start() {
       
-      // create tooltip div
-      tooltip = d3.select("body")
-      .append("div")
-      .style("position", "absolute")
-      .style("z-index", "10")
-      .style("visibility", "hidden")
-      .text("");
 
       // we do this random thing to defeat caching. Very annoying
       $.getJSON("export_list.json?sigh=" + Math.floor(10000*Math.random()), function(data){
