@@ -224,32 +224,39 @@
       var div = d3.select("#notesvis").append("div");
       div.append("p").attr("class", "tt").attr("style", "color: #D9954F").text("Notes");
       var W = $(window).width() - 40;
-      var svg = div.append("svg")
-      .attr("width", W)
-      .attr("height", 70);
-      drawTimeTrack(svg, W, 50);
-
       var sx = (ft-t00) / W;
+      var track_height = 50;
 
-      // Draw coffee. Overlay
       // draw_coffee is set in render_settings.js
+      var coffex = [];
       if(draw_coffee) {
-        var coffex = [];
         for(var i=0;i<100;i++) {
           var there = i*(ft-t00)/100.0;
           coffex.push({t: there, mg: caffeineInBodyMg(coffees, there)});
         }
+      }
+      // 30 px per 150 mg, the scale ulogme always used
+      var pxPerMg = 30/150;
+      var peak_px = (d3.max(coffex, function(d) { return d.mg; }) || 0) * pxPerMg;
+      var overflow = Math.max(0, peak_px - track_height);
+
+      var svg = div.append("svg")
+      .attr("width", W)
+      .attr("height", 70 + overflow)
+      .append("g")
+      .attr("transform", "translate(0," + overflow + ")");
+      drawTimeTrack(svg, W, track_height);
+
+      if(draw_coffee) {
         var cdx = (ft - t00)/100.0;
-        // 30 px per 150 mg, the scale ulogme always used; full track height = 250 mg
-        var pxPerMg = 30/150;
         svg.selectAll(".c")
           .data(coffex)
           .enter()
           .append("rect")
           .attr("width", cdx/sx)
           .attr("x", function(d){ return d.t/sx; })
-          .attr("y", function(d){ return 50 - Math.min(50, d.mg*pxPerMg); })
-          .attr("height", function(d){ return Math.min(50, d.mg*pxPerMg); })
+          .attr("y", function(d){ return track_height - d.mg*pxPerMg; })
+          .attr("height", function(d){ return d.mg*pxPerMg; })
           .attr("fill", "#5A4632")
           .call(addTooltip, function(d) { return ppClock(d.t + t00) + ": ~" + Math.round(d.mg) + " mg caffeine"; });
       }

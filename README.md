@@ -66,7 +66,7 @@ The user interface can switch between a single day view and an overview view by 
 
 - You can enter a reminder "blog" on top if you'd like to summarize the day for yourself or enter other memos.
 - Click on any bar in the *barcode view* to enter a custom (short) note snippet for the time when the selected activity began. I use this to mark meetings, track my coffee/food intake, sleep time, or my total time spent running/swimming/gym or to leave notes for certain patterns of activity, etc. These could all later be correlated with various measures of productivity, in future.
-- A note containing `coffee` (optionally `coffee mild`, `coffee medium` or `coffee strong`: ~60, 95 or 150 mg caffeine, default medium) is drawn as caffeine in the body under the Notes row when `draw_coffee` is on in `render_settings.js` (5.7 h half-life; 30 px per 150 mg, full height = 250 mg).
+- A note containing `coffee` (optionally `coffee mild`, `coffee medium` or `coffee strong`: ~60, 95 or 150 mg caffeine, default medium) is drawn as caffeine in the body under the Notes row when `draw_coffee` is on in `render_settings.js` (5.7 h half-life; 30 px per 150 mg; the row grows taller when caffeine exceeds 250 mg).
 
 #### Overview page
 
