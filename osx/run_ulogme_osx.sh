@@ -44,7 +44,7 @@ while true; do
   sleep 9
   touch $KEYSTROKE_RAW_FILE
   num=$(wc -l < $KEYSTROKE_RAW_FILE)
-  KEYSTROKE_FILE="$(pwd)/logs/keyfreq_$(python rewind7am.py).txt"
+  KEYSTROKE_FILE="$(pwd)/logs/keyfreq_$(python osx/rewind7am.py).txt"
   echo "$(date +%s) $num"  >> $KEYSTROKE_FILE
   rm $KEYSTROKE_RAW_FILE
 done
